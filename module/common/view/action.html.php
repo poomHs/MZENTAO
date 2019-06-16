@@ -130,7 +130,10 @@ $(function()
   <ol id='historyItem'>
     <?php $i = 1; ?>
     <?php foreach($actions as $action):?>
-    <?php $canEditComment = (end($actions) == $action and $action->comment and $this->methodName == 'view' and $action->actor == $this->app->user->account);?>
+    <?php $canEditComment = (end($actions) == $action and $action->comment and $this->methodName == 'view' and $action->actor == $this->app->user->account);
+     if($action->action == 'svncommited'){ continue;};//不显示提交记录
+    ?>
+    
     <li value='<?php echo $i ++;?>'>
       <?php
       if(isset($users[$action->actor])) $action->actor = $users[$action->actor];

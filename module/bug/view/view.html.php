@@ -226,6 +226,7 @@
         <ul class='nav nav-tabs'>
           <li class='active'><a href='#legendLife' data-toggle='tab'><?php echo $lang->bug->legendLife;?></a></li>
           <li><a href='#legendMisc' data-toggle='tab'><?php echo $lang->bug->legendMisc;?></a></li>
+          <li><a href='#legendBranch' data-toggle='tab'><?php echo $lang->bug->legendBranch;?></a></li>
         </ul>
         <div class='tab-content'>
           <div class='tab-pane active' id='legendLife'>
@@ -324,6 +325,41 @@
                 <td><?php echo html::a($this->createLink('task', 'view', "taskID=$bug->toTask"), "#$bug->toTask $bug->toTaskTitle", '_blank');?></td>
               </tr>
               <?php endif;?>
+            </table>
+          </div>
+          <div class='tab-pane' id='legendBranch'>
+            <table class='table table-data table-condensed table-borderless table-fixed'>
+             <?php foreach($reposActions as  $reposAction){
+               
+                echo "<tr class='text-top'><td class='w-80px'>". $lang->bug->legendBranch.":</td>";
+                echo "<td>".$reposAction->reponame."</td></tr>";
+                echo "<tr class='text-top'><td class='w-80px'>"."代码提交".":</td>";
+                $status = '';
+               switch ($reposAction->status) {
+                 case 1:
+                 $status = '<span class="green">已提交</span>';
+                   break;
+                   case 2:
+                   $status = '<span class="bug-active">部分提交</span>';
+                    break;
+                 default:
+                  $status = '<span class="bug-active">未提交</span>';
+                   break;
+               }
+                echo "<td>".$status."</td></tr>";
+               foreach($reposAction->files as $index =>$files){
+                 if($index==0){
+                  echo "<tr class='text-top'><td class='w-80px'>差异文件:</td>";
+                 }else{
+                  echo "<tr class='text-top'><td class='w-80px'></td>";
+                 }
+                
+                echo "<td class='bug-active'>".$files.":</td></tr>";
+                
+               }
+
+             }
+             ?>
             </table>
           </div>
         </div>

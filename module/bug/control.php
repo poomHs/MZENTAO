@@ -26,6 +26,7 @@ class bug extends control
         $this->loadModel('tree');
         $this->loadModel('user');
         $this->loadModel('action');
+        $this->loadModel('svn');
         $this->loadModel('story');
         $this->loadModel('task');
         $this->view->products = $this->products = $this->product->getPairs('nocode');
@@ -460,9 +461,83 @@ class bug extends control
         $this->view->actions     = $this->action->getList('bug', $bugID);
         $this->view->builds      = $this->loadModel('build')->getProductBuildPairs($productID, $branch = 0, $params = '');
         $this->view->preAndNext  = $this->loadModel('common')->getPreAndNextObject('bug', $bugID);
+        $this->view->reposActions = $this->filterSvncommitedAction($this->view->actions);
+       // 
+        //svncommited action
+        
 
         $this->display();
     }
+    /**
+     * ajax
+     */
+    public function syncSvnInfo($bugID)
+    {
+        $bug = $this->bug->getById($bugID, true);
+        if(!$bug) die(js::error($this->lang->notFound) . js::locate('back'));
+
+        if($bug->project and !$this->loadModel('project')->checkPriv($this->project->getByID($bug->project)))
+        {
+            echo(js::alert($this->lang->project->accessDenied));
+            die(js::locate('back'));
+        }
+        $actions = $this->svn->getSyncAction('bug', $bugID);
+        $reposActions =  $this->filterSvncommitedAction($actions);
+        die($reposActions);
+    }
+
+
+    function filterSvncommitedAction($actions){
+        $repos = $this->loadmodel('svn')->getRepos();
+        $reposActions = array();
+        global  $path ;
+        foreach($repos  as $key=>$repo){
+            $reposActions[$key]->reponame = $repo['reponame'];
+            $reposActions[$key]->path = $repo['path'];
+            $GLOBALS[$path] =  $repo['path'];
+            $reposActions[$key]->actions  = array_filter($actions,function($action){
+              
+                 if($action->action !='svncommited' ){
+                     return false;
+                 }
+                 $history = reset($action->history);//取第一个
+                 if(empty($history)){
+                    return false;
+                 }
+                  //判断是subversion的action 并且是同一个repo
+                  if(($history->field=='subversion')&&($history->old== $GLOBALS[$path])){
+                      return true;
+                  }
+             });
+             $reposActions[$key]->actions = array_values($reposActions[$key]->actions);
+             $reposActions[$key]->files = array_map(function($actionHis){ 
+                return reset($actionHis->history)->new;
+             },$reposActions[$key]->actions);
+        }
+        $diffFile = array();
+        foreach($reposActions as $changeAction){
+            $changesFile=array();
+            foreach($changeAction->files as $files){
+                $changesFile = array_merge($changesFile,explode('/',$files));
+            }
+            $changeAction->files=array_unique($changesFile);
+            $diffFile = array_intersect_assoc($diffFile, $changeAction->files);//返回相同的文件
+        }
+        foreach($reposActions as $changeAction){
+            if(empty($changeAction->files)){
+                $changeAction->status = 0;//未提交
+            }
+        
+            $changeAction->files = array_diff($changeAction->files,$diffFile);//去除相同的文件 留下不同的
+            if(empty($changeAction->files)){
+                $changeAction->status = 1;//已提交
+            }else{
+                $changeAction->status = 2;//部分提交
+            }
+        }
+        return $reposActions;
+    }
+    
 
     /**
      * Edit a bug.

@@ -130,6 +130,7 @@ $lang->bug->legendSteps                 = '重现步骤';
 $lang->bug->legendComment               = '备注';
 $lang->bug->legendLife                  = 'BUG的一生';
 $lang->bug->legendMisc                  = '其他相关';
+$lang->bug->legendBranch                = '代码分支';
 
 /* 功能按钮。*/
 $lang->bug->buttonConfirm        = '确认';

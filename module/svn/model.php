@@ -72,6 +72,63 @@ class svnModel extends model
         parent::__construct();
         $this->loadModel('action');
     }
+    /**
+     * @access public
+     */
+    public function getSyncInfo($method,$id){
+
+        $this->setRepos();
+        if(empty($this->repos)) return false;
+
+        $this->setLogRoot();
+        $this->setRestartFile();
+
+        foreach($this->repos as $name => $repo)
+        {
+            $this->printLog("begin repo $name");
+            $repo = (object)$repo;
+            if(!$this->setRepo($repo)) return false;
+
+            $savedRevision = 0;
+            $this->printLog("start from revision $savedRevision");
+            $logs = $this->getRepoLogs($repo, $savedRevision);
+            if(empty($logs)) continue;
+
+            $this->printLog("get " . count($logs) . " logs");
+            $this->printLog('begin parsing logs');
+            foreach($logs as $log)
+            {
+
+                $this->printLog("comment is\n----------\n" . trim($log->msg) . "\n----------");
+                $objects = $this->parseComment($log->msg);
+                if($objects)
+                {
+                    $this->printLog('extract' . 
+                        'story:' . join(' ', $objects['stories']) . 
+                        ' task:' . join(' ', $objects['tasks']) . 
+                        ' bug:'  . join(',', $objects['bugs']));
+
+                        if($id==objects[$method]){
+                            //匹配
+                            $repoRoot = '';
+                            $action = new stdclass();
+                            $action->actor   = $log->author;
+                            $action->action  = 'svncommited';
+                            $action->date    = $log->date;
+                            $action->comment = htmlspecialchars($this->iconvComment($log->msg));
+                            $action->extra   = $log->revision;
+                    
+                            $changes = $this->createActionChanges($log, $repoRoot,$repo); 
+                        }
+                }
+                else
+                {
+                    $this->printLog('no objects found' . "\n");
+                }
+            }
+            $this->printLog("\n\nrepo $name finished");
+        }
+    }
 
     /**
      * Run. 
@@ -91,7 +148,6 @@ class svnModel extends model
         {
             $this->printLog("begin repo $name");
             $repo = (object)$repo;
-            $repo->name = $name;
             if(!$this->setRepo($repo)) return false;
 
             $savedRevision = $this->getSavedRevision();
@@ -119,7 +175,7 @@ class svnModel extends model
                         ' task:' . join(' ', $objects['tasks']) . 
                         ' bug:'  . join(',', $objects['bugs']));
 
-                    $this->saveAction2PMS($objects, $log);
+                    $this->saveAction2PMS($objects, $log, $repo);
                 }
                 else
                 {
@@ -184,6 +240,20 @@ class svnModel extends model
 
         $this->repos = $this->config->svn->repos;
         return true;
+    }
+
+    /**
+     * Set the repos.
+     * 
+     * @access public
+     * @return bool
+     */
+    public function getRepos()
+    {
+        
+        $this->setRepos();
+        $this->repos = $this->config->svn->repos;
+        return $this->repos;
     }
 
     /**
@@ -454,8 +524,9 @@ class svnModel extends model
      * @access public
      * @return void
      */
-    public function saveAction2PMS($objects, $log, $repoRoot = '')
+    public function saveAction2PMS($objects, $log,$repo)
     {
+        $repoRoot = '';
         $action = new stdclass();
         $action->actor   = $log->author;
         $action->action  = 'svncommited';
@@ -463,7 +534,7 @@ class svnModel extends model
         $action->comment = htmlspecialchars($this->iconvComment($log->msg));
         $action->extra   = $log->revision;
 
-        $changes = $this->createActionChanges($log, $repoRoot);
+        $changes = $this->createActionChanges($log, $repoRoot,$repo);
 
         if($objects['stories'])
         {
@@ -562,11 +633,11 @@ class svnModel extends model
      * @access public
      * @return array
      */
-    public function createActionChanges($log, $repoRoot)
+    public function createActionChanges($log, $repoRoot,$repo)
     {
         if(!$log->files) return array();
         $diff = '';
-
+        $changeFiles = '';
         $oldSelf = $this->server->PHP_SELF;
         $this->server->set('PHP_SELF', $this->config->webRoot);
 
@@ -581,11 +652,12 @@ class svnModel extends model
                 $diffLink = trim(html::a(helper::createLink('svn', 'diff', $param, 'html'), 'diff', '', "class='repolink'"));
                 $diff .= $action . " " . $file . " $catLink ";
                 $diff .= $action == 'M' ? "$diffLink\n" : "\n" ;
+                $changeFiles .= $file;
             }
         }
         $changes->field = 'subversion';
-        $changes->old   = '';
-        $changes->new   = '';
+        $changes->old   = $repo->path;
+        $changes->new   = ltrim($changeFiles,'/');
         $changes->diff  = trim($diff);
 
         $this->server->set('PHP_SELF', $oldSelf);

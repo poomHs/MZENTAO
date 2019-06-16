@@ -57,7 +57,10 @@ class svn extends control
         
        $this->display(); 
     }
-
+  public function getSyncAction($method,$id)
+  {
+      
+  }
     /**
      * Sync from the syncer by api.
      * 

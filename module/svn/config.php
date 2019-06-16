@@ -15,18 +15,20 @@
  * $config->svn->repos['pms']['password'] = 'pass';
  *
  */
-$config->svn = new stdClass();
-$config->svn->encodings = 'utf-8';
-$config->svn->client    = '';
 
-$i = 1;
-$config->svn->repos[$i]['path']     = '';
-$config->svn->repos[$i]['username'] = '';
-$config->svn->repos[$i]['password'] = '';
+// $config->svn = new stdClass();
+// $config->svn->encodings = 'utf-8';
+// $config->svn->client    = 'C:\wamp64\www\zentao\SlikSvn\bin\svn.exe';
 
-/*
-$i ++;
-$config->svn->repos[$i]['path']     = '';
-$config->svn->repos[$i]['username'] = '';
-$config->svn->repos[$i]['password'] = '';
-*/
+// $i = 1;
+// $config->svn->repos[$i]['path']     = 'svn://gitee.com/treeandmen/zendao';
+// $config->svn->repos[$i]['username'] = '270451369@qq.com';
+// $config->svn->repos[$i]['password'] = '!!my1030';
+// $config->svn->repos[$i]['reponame'] = '主线100';
+
+// $i ++;
+// $config->svn->repos[$i]['path']     = 'svn://gitee.com/treeandmen/zendao2';
+// $config->svn->repos[$i]['username'] = '270451369@qq.com';
+// $config->svn->repos[$i]['password'] = '!!my1030';
+// $config->svn->repos[$i]['reponame'] = '82分支';
+
