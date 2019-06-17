@@ -471,19 +471,15 @@ class bug extends control
     /**
      * ajax
      */
-    public function syncSvnInfo($bugID)
+    public function ajaxSyncSvnInfo($bugID)
     {
         $bug = $this->bug->getById($bugID, true);
+        var_dump($bugID);
         if(!$bug) die(js::error($this->lang->notFound) . js::locate('back'));
-
-        if($bug->project and !$this->loadModel('project')->checkPriv($this->project->getByID($bug->project)))
-        {
-            echo(js::alert($this->lang->project->accessDenied));
-            die(js::locate('back'));
-        }
         $actions = $this->svn->getSyncAction('bug', $bugID);
         $reposActions =  $this->filterSvncommitedAction($actions);
-        die($reposActions);
+        var_dump($reposActions);
+        die(json_encode($reposActions));
     }
 
 
@@ -500,6 +496,7 @@ class bug extends control
                  if($action->action !='svncommited' ){
                      return false;
                  }
+                
                  $history = reset($action->history);//取第一个
                  if(empty($history)){
                     return false;
@@ -526,6 +523,7 @@ class bug extends control
         foreach($reposActions as $changeAction){
             if(empty($changeAction->files)){
                 $changeAction->status = 0;//未提交
+                continue;
             }
         
             $changeAction->files = array_diff($changeAction->files,$diffFile);//去除相同的文件 留下不同的

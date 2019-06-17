@@ -337,16 +337,16 @@
                 $status = '';
                switch ($reposAction->status) {
                  case 1:
-                 $status = '<span class="green">已提交</span>';
+                  $status = '<span class="label label-success">已提交</span>';
                    break;
                    case 2:
-                   $status = '<span class="bug-active">部分提交</span>';
+                   $status = '<span class="label label-danger">部分提交</span>';
                     break;
                  default:
-                  $status = '<span class="bug-active">未提交</span>';
+                  $status = '<span class="label label-warning">未提交</span>';
                    break;
                }
-                echo "<td>".$status."</td></tr>";
+                echo  "<td>".$status."</td></tr>";
                foreach($reposAction->files as $index =>$files){
                  if($index==0){
                   echo "<tr class='text-top'><td class='w-80px'>差异文件:</td>";

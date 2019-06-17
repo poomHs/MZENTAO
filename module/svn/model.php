@@ -75,8 +75,20 @@ class svnModel extends model
     /**
      * @access public
      */
-    public function getSyncInfo($method,$id){
+    public function getSyncAction($method,$id){
 
+        //对请求参数改变成复数形式
+        switch ($method) {
+            case 'bug':
+            case 'task':
+                 $method.='s';
+                break;
+                case 'story':
+                $method='stories';
+                break;
+        }
+
+        $repoActions =array();
         $this->setRepos();
         if(empty($this->repos)) return false;
 
@@ -107,18 +119,29 @@ class svnModel extends model
                         'story:' . join(' ', $objects['stories']) . 
                         ' task:' . join(' ', $objects['tasks']) . 
                         ' bug:'  . join(',', $objects['bugs']));
-
-                        if($id==objects[$method]){
-                            //匹配bug 
-                            $repoRoot = '';
-                            $action = new stdclass();
-                            $action->actor   = $log->author;
-                            $action->action  = 'svncommited';
-                            $action->date    = $log->date;
-                            $action->comment = htmlspecialchars($this->iconvComment($log->msg));
-                            $action->extra   = $log->revision;
-                            $changes = $this->createActionChanges($log, $repoRoot,$repo); 
-                        }
+                        if($objects[$method]){
+                            foreach($objects[$method] as $object){
+                                if($id==$object){
+                                    //匹配bug 
+                                    $repoRoot = '';
+                                    $action = new stdclass();
+                                    $action->actor   = $log->author;
+                                    $action->action  = 'svncommited';
+                                    $action->date    = $log->date;
+                                    $action->comment = htmlspecialchars($this->iconvComment($log->msg));
+                                    $action->extra   = $log->revision;
+                                    $changes = $this->createActionChanges($log, $repoRoot,$repo);
+                                    $history = new stdclass();
+                                    foreach ($changes as $k =>$changes) {
+                                        $history->$k = $changes;
+                                    }
+                                    $action->history = array($history);
+                                    $action->objectType = $method;
+                                    $action->objectID   =$id;
+                                    array_push($repoActions,$action); 
+                                }
+                            }
+                        } 
                 }
                 else
                 {
@@ -127,6 +150,7 @@ class svnModel extends model
             }
             $this->printLog("\n\nrepo $name finished");
         }
+        return $repoActions;
     }
 
     /**
