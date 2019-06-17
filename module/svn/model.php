@@ -109,7 +109,7 @@ class svnModel extends model
                         ' bug:'  . join(',', $objects['bugs']));
 
                         if($id==objects[$method]){
-                            //匹配
+                            //匹配bug 
                             $repoRoot = '';
                             $action = new stdclass();
                             $action->actor   = $log->author;
@@ -117,7 +117,6 @@ class svnModel extends model
                             $action->date    = $log->date;
                             $action->comment = htmlspecialchars($this->iconvComment($log->msg));
                             $action->extra   = $log->revision;
-                    
                             $changes = $this->createActionChanges($log, $repoRoot,$repo); 
                         }
                 }
