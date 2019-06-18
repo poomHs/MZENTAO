@@ -680,7 +680,7 @@ class svnModel extends model
         }
         $changes->field = 'subversion';
         $changes->old   = $repo->path;
-        $changes->new   = ltrim($changeFiles,'/');
+        $changes->new   = ltrim($str_replace('/','|',$changeFiles),'');
         $changes->diff  = trim($diff);
 
         $this->server->set('PHP_SELF', $oldSelf);

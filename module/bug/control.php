@@ -515,7 +515,7 @@ class bug extends control
         foreach($reposActions as $changeAction){
             $changesFile=array();
             foreach($changeAction->files as $files){
-                $changesFile = array_merge($changesFile,explode('/',$files));
+                $changesFile = array_merge($changesFile,explode('|',$files));
             }
             $changeAction->files=array_unique($changesFile);
             $diffFile = array_intersect_assoc($diffFile, $changeAction->files);//返回相同的文件
