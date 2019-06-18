@@ -354,7 +354,7 @@
                   echo "<tr class='text-top'><td class='w-80px'></td>";
                  }
                 
-                echo "<td class='bug-active'>".$files.":</td></tr>";
+                echo "<td class='bug-active'>".substr($files,stripos($files,'src')).":</td></tr>"; 
                 
                }
 

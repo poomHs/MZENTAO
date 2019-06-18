@@ -675,12 +675,12 @@ class svnModel extends model
                 $diffLink = trim(html::a(helper::createLink('svn', 'diff', $param, 'html'), 'diff', '', "class='repolink'"));
                 $diff .= $action . " " . $file . " $catLink ";
                 $diff .= $action == 'M' ? "$diffLink\n" : "\n" ;
-                $changeFiles .= $file;
+                $changeFiles =$changeFiles.'|'.$file;
             }
         }
         $changes->field = 'subversion';
         $changes->old   = $repo->path;
-        $changes->new   = ltrim($str_replace('/','|',$changeFiles),'');
+        $changes->new   = ltrim($changeFiles,'|');
         $changes->diff  = trim($diff);
 
         $this->server->set('PHP_SELF', $oldSelf);
