@@ -57,10 +57,69 @@ class svn extends control
         
        $this->display(); 
     }
-  public function getSyncAction($method,$id)
-  {
-      
-  }
+   /**
+     * ajax
+     */
+    public function ajaxSyncSvnInfo($method,$bugID)
+    {
+        var_dump('$method:'.$method.":".$bugID);
+        $actions = $this->svn->getSyncAction($method, $bugID);
+        $reposActions =  $this->filterSvncommitedAction($actions);
+        die(json_encode($reposActions));
+    }
+
+    function filterSvncommitedAction($actions){
+        $repos =   $this->svn->getRepos();
+        $reposActions = array();
+        global  $path ;
+        foreach($repos  as $key=>$repo){
+            $reposActions[$key]->reponame = $repo['reponame'];
+            $reposActions[$key]->path = $repo['path'];
+            $GLOBALS[$path] =  $repo['path'];
+            $reposActions[$key]->actions  = array_filter($actions,function($action){
+              
+                 if($action->action !='svncommited' ){
+                     return false;
+                 }
+                
+                 $history = reset($action->history);//取第一个
+                 if(empty($history)){
+                    return false;
+                 }
+                  //判断是subversion的action 并且是同一个repo
+                  if(($history->field=='subversion')&&($history->old== $GLOBALS[$path])){
+                      return true;
+                  }
+             });
+             $reposActions[$key]->actions = array_values($reposActions[$key]->actions);
+             $reposActions[$key]->files = array_map(function($actionHis){ 
+                return reset($actionHis->history)->new;
+             },$reposActions[$key]->actions);
+        }
+        $diffFile = array();
+        foreach($reposActions as $changeAction){
+            $changesFile=array();
+            foreach($changeAction->files as $files){
+                $changesFile = array_merge($changesFile,explode('|',$files));
+            }
+            $changeAction->files=array_unique($changesFile);
+            $diffFile = array_intersect_assoc($diffFile, $changeAction->files);//返回相同的文件
+        }
+        foreach($reposActions as $changeAction){
+            if(empty($changeAction->files)){
+                $changeAction->status = 0;//未提交
+                continue;
+            }
+        
+            $changeAction->files = array_diff($changeAction->files,$diffFile);//去除相同的文件 留下不同的
+            if(empty($changeAction->files)){
+                $changeAction->status = 1;//已提交
+            }else{
+                $changeAction->status = 2;//部分提交
+            }
+        }
+        return $reposActions;
+    }
     /**
      * Sync from the syncer by api.
      * 
