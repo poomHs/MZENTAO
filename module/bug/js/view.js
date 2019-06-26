@@ -9,7 +9,7 @@ $(document).ready(function(){
             legendBranch.find("#ajaxSyncSvnInfo").on('click',function(){
                 $.ajax({
                     type: "GET",
-                    url: "svn-ajaxSyncSvnInfo.html?method="+method+"&id=1",
+                    url: "svn-ajaxSyncSvnInfo-"+method+"-1"+".json",
                     contentType: "application/json; charset=utf-8",
                     dataType: "json",
                     beforeSend:function(){
