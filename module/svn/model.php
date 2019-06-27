@@ -101,7 +101,7 @@ class svnModel extends model
             $repo = (object)$repo;
             if(!$this->setRepo($repo)) return false;
 
-            $savedRevision = 0;
+            $savedRevision = $repo->beginRevision;
             $this->printLog("start from revision $savedRevision");
             $logs = $this->getRepoLogs($repo, $savedRevision);
             if(empty($logs)) continue;
